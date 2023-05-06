@@ -1,0 +1,25 @@
+{
+  "name": "index-encoder",
+  "version": "0.0.0",
+  "description": "Encode multiple values into sorted keys",
+  "main": "index.js",
+  "dependencies": {
+    "b4a": "^1.6.4"
+  },
+  "devDependencies": {
+    "standard": "^17.0.0"
+  },
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/holepunchto/index-encoder.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/holepunchto/index-encoder/issues"
+  },
+  "homepage": "https://github.com/holepunchto/index-encoder"
+}
