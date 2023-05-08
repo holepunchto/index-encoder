@@ -102,15 +102,19 @@ UINT.encode = function (state, n) {
   }
 
   if (n <= 0xffff) {
+    state.buffer[state.start++] = 0xfd
     state.buffer[state.start++] = n >>> 8
     state.buffer[state.start++] = n
     return
   }
 
   if (n <= 0xffffffff) {
+    state.buffer[state.start++] = 0xfe
     encodeUint32(state, n)
     return
   }
+
+  state.buffer[state.start++] = 0xff
 
   const r = Math.floor(n / 0x100000000)
   encodeUint32(state, r)
