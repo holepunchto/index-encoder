@@ -50,7 +50,11 @@ test('hyperbee bounded iteration', async function (t) {
   await bee.put([3, 'bbb'], 'bbb')
 
   const expectedKeys = [[2, 'aa'], [2, 'bb']]
-  for await (const node of bee.createReadStream({ gt: [1], lt: [3] })) {
+  const range = keyEncoding.range({
+    gt: [1],
+    lt: [3]
+  })
+  for await (const node of bee.createReadStream(range)) {
     t.alike(node.key, expectedKeys.shift)
   }
   t.is(expectedKeys.length, 0)
