@@ -26,8 +26,8 @@ test('basic', function (t) {
 
   t.alike(sliceAndDecode(i, [], [], keys), data)
   t.alike(sliceAndDecode(i, [0], [0], keys), [[0, 'a'], [0, 'b'], [0, 'c']])
-  t.alike(sliceAndDecode(i, [0, 'a'], [0], keys), [[0, 'b'], [0, 'c']])
-  t.alike(sliceAndDecode(i, [0, 'a'], [0, 'c'], keys), [[0, 'b']])
+  t.alike(sliceAndDecode(i, [0, 'b'], [0], keys), [[0, 'b'], [0, 'c']])
+  t.alike(sliceAndDecodeNonInclusive(i, [0, 'a'], [0, 'c'], keys), [[0, 'b']])
   t.alike(sliceAndDecode(i, [1], [1], keys), [[1, 'a']])
   t.alike(sliceAndDecode(i, [2], [], keys), [[2, 'a'], [300, 'c'], [400, 'c']])
 })
@@ -50,24 +50,34 @@ test('hyperbee bounded iteration', async function (t) {
   await bee.put([3, 'bbb'], 'bbb')
 
   const expectedKeys = [[2, 'aa'], [2, 'bb']]
-  const range = keyEncoding.range({
-    gt: [1],
-    lt: [3]
-  })
+  const range = keyEncoding.range({ gt: [1], lt: [3] })
+
   for await (const node of bee.createReadStream(range)) {
-    t.alike(node.key, expectedKeys.shift)
+    t.alike(node.key, expectedKeys.shift())
   }
   t.is(expectedKeys.length, 0)
 })
 
-function sliceAndDecode (i, gt, lt, data) {
+function sliceAndDecodeNonInclusive (i, gt, lt, data) {
   const r = i.range({ gt, lt })
-
   const all = []
 
   for (const key of data) {
     if (b4a.compare(r.gt, key) >= 0) continue
     if (b4a.compare(key, r.lt) >= 0) continue
+    all.push(i.decode(key))
+  }
+
+  return all
+}
+
+function sliceAndDecode (i, gte, lte, data) {
+  const r = i.range({ gte, lte })
+  const all = []
+
+  for (const key of data) {
+    if (b4a.compare(r.gte, key) > 0) continue
+    if (b4a.compare(key, r.lte) > 0) continue
     all.push(i.decode(key))
   }
 

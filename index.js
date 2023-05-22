@@ -180,6 +180,8 @@ module.exports = class IndexEncoder {
   }
 
   _encode (keys, terminate) {
+    if (b4a.isBuffer(keys)) return keys
+
     const state = { start: 0, end: 0, buffer: null }
 
     for (let i = 0; i < keys.length; i++) {
@@ -215,18 +217,13 @@ module.exports = class IndexEncoder {
     return result
   }
 
-  range ({ lt, lte, gt, gte, ...opts } = {}) {
-    const res = { lt: null, lte: null, gt: null, gte: null, ...opts }
-
-    if (lt) res.lt = this._encode(lt, true)
-    else if (lte) res.lte = this._encode(lte, true)
-    else res.lt = MAX
-
-    if (gt) res.gt = this.encode(gt)
-    else if (gte) res.gte = this.encode(gte)
-    else res.gt = EMPTY
-
-    return res
+  range (opts) {
+    opts = { ...opts }
+    if (opts.gt) opts.gt = this._encode(opts.gt, true)
+    if (opts.gte) opts.gte = this._encode(opts.gte, false)
+    if (opts.lt) opts.lt = this._encode(opts.lt, false)
+    if (opts.lte) opts.lte = this._encode(opts.lte, true)
+    return opts
   }
 }
 
