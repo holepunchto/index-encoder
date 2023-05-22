@@ -50,16 +50,15 @@ test('hyperbee bounded iteration', async function (t) {
   await bee.put([3, 'bbb'], 'bbb')
 
   const expectedKeys = [[2, 'aa'], [2, 'bb']]
-  const range = keyEncoding.range({ gt: [1], lt: [3] })
 
-  for await (const node of bee.createReadStream(range)) {
+  for await (const node of bee.createReadStream({ gt: [1], lt: [3] })) {
     t.alike(node.key, expectedKeys.shift())
   }
   t.is(expectedKeys.length, 0)
 })
 
 function sliceAndDecodeNonInclusive (i, gt, lt, data) {
-  const r = i.range({ gt, lt })
+  const r = i.encodeRange({ gt, lt })
   const all = []
 
   for (const key of data) {
@@ -72,7 +71,7 @@ function sliceAndDecodeNonInclusive (i, gt, lt, data) {
 }
 
 function sliceAndDecode (i, gte, lte, data) {
-  const r = i.range({ gte, lte })
+  const r = i.encodeRange({ gte, lte })
   const all = []
 
   for (const key of data) {

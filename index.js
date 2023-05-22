@@ -217,13 +217,13 @@ module.exports = class IndexEncoder {
     return result
   }
 
-  range (opts) {
-    opts = { ...opts }
-    if (opts.gt) opts.gt = this._encode(opts.gt, true)
-    if (opts.gte) opts.gte = this._encode(opts.gte, false)
-    if (opts.lt) opts.lt = this._encode(opts.lt, false)
-    if (opts.lte) opts.lte = this._encode(opts.lte, true)
-    return opts
+  encodeRange ({ gt, gte, lt, lte }) {
+    return {
+      gt: gt && this._encode(gt, true),
+      gte: gte && this._encode(gte, false),
+      lt: lt && this._encode(lt, false),
+      lte: lte && this._encode(lte, true)
+    }
   }
 }
 
