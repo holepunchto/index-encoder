@@ -11,7 +11,8 @@
     "hyperbee": "^2.10.5",
     "hypercore": "^10.9.2",
     "random-access-memory": "^6.2.0",
-    "standard": "^17.0.0"
+    "standard": "^17.0.0",
+    "sub-encoder": "^2.0.0"
   },
   "scripts": {
     "test": "standard && brittle test.js"
