@@ -22,4 +22,4 @@ console.log(idx.decode(buf)) // ['foo', 42]
 
 ## License
 
-MIT
+Apache 2.0
