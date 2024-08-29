@@ -18,6 +18,11 @@ const idx = new IndexEncoder([
 
 const buf = idx.encode(['foo', 42])
 console.log(idx.decode(buf)) // ['foo', 42]
+
+// pass any compact encoding name to map it to the relevant encoding
+const uintType = IndexEncoder.lookup('uint')
+const bufferType = IndexEncoder.lookup('buffer')
+const alsoBufferType = IndexEncoder.lookup('fixed32')
 ```
 
 ## License
