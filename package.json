@@ -1,6 +1,6 @@
 {
   "name": "index-encoder",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "Encode multiple values into sorted keys",
   "main": "index.js",
   "dependencies": {
