@@ -167,8 +167,9 @@ UINT.decode = function (state) {
 }
 
 module.exports = class IndexEncoder {
-  constructor (encodings) {
+  constructor (encodings, { prefix = -1 } = {}) {
     this.encodings = encodings
+    this.prefix = prefix
   }
 
   static BUFFER = BUFFER
@@ -208,6 +209,7 @@ module.exports = class IndexEncoder {
 
     const state = { start: 0, end: 0, buffer: null }
 
+    if (this.prefix !== -1) UINT.preencode(state, this.prefix)
     for (let i = 0; i < keys.length; i++) {
       this.encodings[i].preencode(state, keys[i])
     }
@@ -218,6 +220,7 @@ module.exports = class IndexEncoder {
 
     state.buffer = b4a.allocUnsafe(state.end)
 
+    if (this.prefix !== -1) UINT.encode(state, this.prefix)
     for (let i = 0; i < keys.length; i++) {
       this.encodings[i].encode(state, keys[i])
     }
@@ -233,6 +236,7 @@ module.exports = class IndexEncoder {
     const state = { start: 0, end: buffer.byteLength, buffer }
     const result = []
 
+    if (this.prefix !== -1) UINT.decode(state)
     for (const enc of this.encodings) {
       const key = state.start < state.end ? enc.decode(state) : (enc === UINT ? 0 : null)
       result.push(key)
@@ -242,13 +246,28 @@ module.exports = class IndexEncoder {
   }
 
   encodeRange ({ gt, gte, lt, lte }) {
-    return {
+    const range = {
       gt: gt && this._encode(gt, true),
       gte: gte && this._encode(gte, false),
       lt: lt && this._encode(lt, false),
       lte: lte && this._encode(lte, true)
     }
+
+    if (this.prefix !== -1) {
+      if (!gt && !gte) range.gt = encodeUint(this.prefix)
+      if (!lt && !lte) range.lt = encodeUint(this.prefix + 1)
+    }
+
+    return range
   }
+}
+
+function encodeUint (n) {
+  const state = { start: 0, end: 0, buffer: null }
+  UINT.preencode(state, n)
+  state.buffer = b4a.allocUnsafe(state.end)
+  UINT.encode(state, n)
+  return state.buffer
 }
 
 function encodeUint32 (state, n) {

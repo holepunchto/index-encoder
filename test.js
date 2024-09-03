@@ -32,6 +32,20 @@ test('basic', function (t) {
   t.alike(sliceAndDecode(i, [2], [], keys), [[2, 'a'], [300, 'c'], [400, 'c']])
 })
 
+test('basic prefix', function (t) {
+  const i = new IndexEncoder([
+    IndexEncoder.UINT,
+    IndexEncoder.STRING
+  ], { prefix: 4 })
+
+  const buf = i.encode([])
+  t.alike(buf, b4a.from([4]))
+
+  const range = i.encodeRange({})
+  t.alike(range.gt, b4a.from([4]))
+  t.alike(range.lt, b4a.from([5]))
+})
+
 test('hyperbee bounded iteration', async function (t) {
   const keyEncoding = new IndexEncoder([
     IndexEncoder.UINT,
