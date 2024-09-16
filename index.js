@@ -254,8 +254,13 @@ module.exports = class IndexEncoder {
     }
 
     if (this.prefix !== -1) {
-      if (!gt && !gte) range.gt = encodeUint(this.prefix)
-      if (!lt && !lte) range.lt = encodeUint(this.prefix + 1)
+      if (this.encodings.length > 0) {
+        if (!gt && !gte) range.gt = encodeUint(this.prefix)
+        if (!lt && !lte) range.lt = encodeUint(this.prefix + 1)
+      } else {
+        if (!gt && !gte) range.gte = encodeUint(this.prefix)
+        if (!lt && !lte) range.lte = encodeUint(this.prefix)
+      }
     }
 
     return range
