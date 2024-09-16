@@ -42,7 +42,7 @@ test('basic prefix', function (t) {
   t.alike(buf, b4a.from([4]))
 
   const range = i.encodeRange({})
-  t.alike(range.gt, b4a.from([4]))
+  t.alike(range.gte, b4a.from([4]))
   t.alike(range.lt, b4a.from([5]))
 })
 
