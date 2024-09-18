@@ -6,6 +6,57 @@ const ram = require('random-access-memory')
 
 const IndexEncoder = require('./')
 
+test('a bunch of buffers', function (t) {
+  const e = new IndexEncoder([
+    IndexEncoder.BUFFER
+  ])
+
+  const all = []
+  for (let i = 0; i < 65536; i++) {
+    all.push({ i, buffer: e.encode([b4a.from([i >> 8, i & 255])]) })
+  }
+
+  all.sort((a, b) => b4a.compare(a.buffer, b.buffer))
+
+  for (let i = 0; i < all.length; i++) {
+    if (all[i].i !== i) {
+      t.fail('sorted wrong:' + i)
+      return
+    }
+  }
+
+  t.pass('all sorted correctly')
+})
+
+test('some specific buffers', function (t) {
+  const e = new IndexEncoder([
+    IndexEncoder.BUFFER
+  ])
+
+  const all = [
+    { i: 0, buffer: e.encode([b4a.from([0])]) },
+    { i: 1, buffer: e.encode([b4a.from([0, 0])]) },
+    { i: 2, buffer: e.encode([b4a.from([0, 0, 0])]) },
+    { i: 3, buffer: e.encode([b4a.from([0, 1])]) },
+    { i: 4, buffer: e.encode([b4a.from([1])]) },
+    { i: 5, buffer: e.encode([b4a.from([1, 0])]) },
+    { i: 6, buffer: e.encode([b4a.from([1, 0, 0])]) },
+    { i: 7, buffer: e.encode([b4a.from([1, 1])]) },
+    { i: 8, buffer: e.encode([b4a.from([2])]) }
+  ]
+
+  all.sort((a, b) => b4a.compare(a.buffer, b.buffer))
+
+  for (let i = 0; i < all.length; i++) {
+    if (all[i].i !== i) {
+      t.fail('sorted wrong:' + i)
+      return
+    }
+  }
+
+  t.pass('all sorted correctly')
+})
+
 test('basic', function (t) {
   const i = new IndexEncoder([
     IndexEncoder.UINT,
