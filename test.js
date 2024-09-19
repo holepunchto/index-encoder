@@ -57,6 +57,24 @@ test('some specific buffers', function (t) {
   t.pass('all sorted correctly')
 })
 
+test('sliced', function (t) {
+  const e = new IndexEncoder([
+    IndexEncoder.STRING,
+    IndexEncoder.UINT
+  ])
+
+  const all = [
+    e.encode(['hello', 1]),
+    e.encode(['hello', 2]),
+    e.encode(['hallo', 1]),
+    e.encode(['hollo', 1])
+  ]
+
+  all.sort(b4a.compare)
+
+  t.alike(sliceAndDecode(e, ['hello'], ['hello'], all), [['hello', 1], ['hello', 2]])
+})
+
 test('basic', function (t) {
   const i = new IndexEncoder([
     IndexEncoder.UINT,
