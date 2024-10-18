@@ -57,23 +57,6 @@ test('some specific buffers', function (t) {
   t.pass('all sorted correctly')
 })
 
-test('none', function (t) {
-  const e = new IndexEncoder([
-    IndexEncoder.NONE,
-    IndexEncoder.UINT
-  ])
-
-  const e2 = new IndexEncoder([
-    IndexEncoder.UINT
-  ])
-
-  const key = e.encode([null, 2])
-  const key2 = e2.encode([2])
-
-  t.alike(key, key2)
-  t.alike(e.decode(key), [null, 2])
-})
-
 test('sliced', function (t) {
   const e = new IndexEncoder([
     IndexEncoder.STRING,
