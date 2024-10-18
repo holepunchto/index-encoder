@@ -178,23 +178,23 @@ module.exports = class IndexEncoder {
 
   static lookup (c) {
     switch (c) {
-      case 'uint': return IndexEncoder.UINT
-      case 'uint8': return IndexEncoder.UINT
-      case 'uint16': return IndexEncoder.UINT
-      case 'uint24': return IndexEncoder.UINT
-      case 'uint32': return IndexEncoder.UINT
-      case 'uint40': return IndexEncoder.UINT
-      case 'uint48': return IndexEncoder.UINT
-      case 'uint56': return IndexEncoder.UINT
-      case 'uint64': return IndexEncoder.UINT
-      case 'string': return IndexEncoder.STRING
-      case 'utf8': return IndexEncoder.STRING
-      case 'ascii': return IndexEncoder.STRING
-      case 'hex': return IndexEncoder.STRING
-      case 'base64': return IndexEncoder.STRING
-      case 'fixed32': return IndexEncoder.BUFFER
-      case 'fixed64': return IndexEncoder.BUFFER
-      case 'buffer': return IndexEncoder.BUFFER
+      case 'uint': return UINT
+      case 'uint8': return UINT
+      case 'uint16': return UINT
+      case 'uint24': return UINT
+      case 'uint32': return UINT
+      case 'uint40': return UINT
+      case 'uint48': return UINT
+      case 'uint56': return UINT
+      case 'uint64': return UINT
+      case 'string': return STRING
+      case 'utf8': return STRING
+      case 'ascii': return STRING
+      case 'hex': return STRING
+      case 'base64': return STRING
+      case 'fixed32': return BUFFER
+      case 'fixed64': return BUFFER
+      case 'buffer': return BUFFER
     }
 
     throw new Error('Unknown type')
