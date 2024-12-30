@@ -130,11 +130,16 @@ UINT.encode = function (state, n) {
     return
   }
 
-  state.buffer[state.start++] = 0xfe
+  if (Number.isSafeInteger(n)) {
+    state.buffer[state.start++] = 0xfe
 
-  const r = Math.floor(n / 0x100000000)
-  encodeUint32(state, r)
-  encodeUint32(state, n)
+    const r = Math.floor(n / 0x100000000)
+    encodeUint32(state, r)
+    encodeUint32(state, n)
+    return
+  }
+
+  throw new Error('Invalid number ' + n)
 }
 
 UINT.decode = function (state) {
