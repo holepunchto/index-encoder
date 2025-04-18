@@ -171,6 +171,12 @@ UINT.decode = function (state) {
   return Infinity
 }
 
+const BOOL = {}
+
+BOOL.preencode = (state, b) => UINT.preencode(state, b ? 1 : 0)
+BOOL.encode = (state, b) => UINT.encode(state, b ? 1 : 0)
+BOOL.decode = (state, b) => !!UINT.decode(state)
+
 module.exports = class IndexEncoder {
   constructor (encodings, { prefix = -1 } = {}) {
     this.encodings = encodings
@@ -180,6 +186,7 @@ module.exports = class IndexEncoder {
   static BUFFER = BUFFER
   static STRING = STRING
   static UINT = UINT
+  static BOOL = BOOL
 
   static lookup (c) {
     switch (c) {
@@ -200,6 +207,7 @@ module.exports = class IndexEncoder {
       case 'fixed32': return BUFFER
       case 'fixed64': return BUFFER
       case 'buffer': return BUFFER
+      case 'bool': return BOOL
     }
 
     throw new Error('Unknown type')
