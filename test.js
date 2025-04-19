@@ -116,7 +116,6 @@ test('bool indices', function (t) {
 
   const keys = data.map(d => i.encode(d))
 
-  console.log(sliceAndDecode(i, [], [], keys))
   t.alike(sliceAndDecode(i, [], [], keys), [[true, true], [true, false], [false, true], [false, false]])
 })
 
