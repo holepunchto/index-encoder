@@ -74,6 +74,7 @@ The following are the types for `encodings` are supported provided as static pro
 - `IndexEncoder.BUFFER` : Encodes a buffer.
 - `IndexEncoder.STRING` : Encodes a string.
 - `IndexEncoder.UINT` : Encodes an unsigned integer.
+- `IndexEncoder.BOOL` : Encodes a boolean.
 
 #### `const enc = IndexEncoder.lookup(c)`
 
