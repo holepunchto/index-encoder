@@ -101,6 +101,24 @@ test('basic', function (t) {
   t.alike(sliceAndDecode(i, [2], [], keys), [[2, 'a'], [300, 'c'], [400, 'c']])
 })
 
+test('bool indices', function (t) {
+  const i = new IndexEncoder([
+    IndexEncoder.BOOL,
+    IndexEncoder.BOOL
+  ])
+
+  const data = [
+    [true, true],
+    [true, false],
+    [false, true],
+    [false, false]
+  ]
+
+  const keys = data.map(d => i.encode(d))
+
+  t.alike(sliceAndDecode(i, [], [], keys), [[true, true], [true, false], [false, true], [false, false]])
+})
+
 test('basic prefix', function (t) {
   const i = new IndexEncoder([
     IndexEncoder.UINT,
