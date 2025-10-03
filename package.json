@@ -10,10 +10,13 @@
     "brittle": "^3.2.1",
     "hyperbee": "^2.10.5",
     "hypercore": "^11.0.0",
-    "standard": "^17.0.0"
+    "prettier": "^3.6.2",
+    "prettier-config-holepunch": "^1.0.0"
   },
   "scripts": {
-    "test": "standard && brittle test.js"
+    "format": "prettier --write .",
+    "lint": "prettier --check .",
+    "test": "npm run lint && brittle test.js"
   },
   "repository": {
     "type": "git",
