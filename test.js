@@ -6,9 +6,7 @@ const Hypercore = require('hypercore')
 const IndexEncoder = require('./')
 
 test('a bunch of buffers', function (t) {
-  const e = new IndexEncoder([
-    IndexEncoder.BUFFER
-  ])
+  const e = new IndexEncoder([IndexEncoder.BUFFER])
 
   const all = []
   for (let i = 0; i < 65536; i++) {
@@ -28,9 +26,7 @@ test('a bunch of buffers', function (t) {
 })
 
 test('some specific buffers', function (t) {
-  const e = new IndexEncoder([
-    IndexEncoder.BUFFER
-  ])
+  const e = new IndexEncoder([IndexEncoder.BUFFER])
 
   const all = [
     { i: 0, buffer: e.encode([b4a.from([0])]) },
@@ -57,10 +53,7 @@ test('some specific buffers', function (t) {
 })
 
 test('sliced', function (t) {
-  const e = new IndexEncoder([
-    IndexEncoder.STRING,
-    IndexEncoder.UINT
-  ])
+  const e = new IndexEncoder([IndexEncoder.STRING, IndexEncoder.UINT])
 
   const all = [
     e.encode(['hello', 1]),
@@ -71,14 +64,14 @@ test('sliced', function (t) {
 
   all.sort(b4a.compare)
 
-  t.alike(sliceAndDecode(e, ['hello'], ['hello'], all), [['hello', 1], ['hello', 2]])
+  t.alike(sliceAndDecode(e, ['hello'], ['hello'], all), [
+    ['hello', 1],
+    ['hello', 2]
+  ])
 })
 
 test('basic', function (t) {
-  const i = new IndexEncoder([
-    IndexEncoder.UINT,
-    IndexEncoder.STRING
-  ])
+  const i = new IndexEncoder([IndexEncoder.UINT, IndexEncoder.STRING])
 
   const data = [
     [0, 'a'],
@@ -90,21 +83,29 @@ test('basic', function (t) {
     [400, 'c']
   ]
 
-  const keys = data.map(d => i.encode(d))
+  const keys = data.map((d) => i.encode(d))
 
   t.alike(sliceAndDecode(i, [], [], keys), data)
-  t.alike(sliceAndDecode(i, [0], [0], keys), [[0, 'a'], [0, 'b'], [0, 'c']])
-  t.alike(sliceAndDecode(i, [0, 'b'], [0], keys), [[0, 'b'], [0, 'c']])
+  t.alike(sliceAndDecode(i, [0], [0], keys), [
+    [0, 'a'],
+    [0, 'b'],
+    [0, 'c']
+  ])
+  t.alike(sliceAndDecode(i, [0, 'b'], [0], keys), [
+    [0, 'b'],
+    [0, 'c']
+  ])
   t.alike(sliceAndDecodeNonInclusive(i, [0, 'a'], [0, 'c'], keys), [[0, 'b']])
   t.alike(sliceAndDecode(i, [1], [1], keys), [[1, 'a']])
-  t.alike(sliceAndDecode(i, [2], [], keys), [[2, 'a'], [300, 'c'], [400, 'c']])
+  t.alike(sliceAndDecode(i, [2], [], keys), [
+    [2, 'a'],
+    [300, 'c'],
+    [400, 'c']
+  ])
 })
 
 test('bool indices', function (t) {
-  const i = new IndexEncoder([
-    IndexEncoder.BOOL,
-    IndexEncoder.BOOL
-  ])
+  const i = new IndexEncoder([IndexEncoder.BOOL, IndexEncoder.BOOL])
 
   const data = [
     [true, true],
@@ -113,16 +114,20 @@ test('bool indices', function (t) {
     [false, false]
   ]
 
-  const keys = data.map(d => i.encode(d))
+  const keys = data.map((d) => i.encode(d))
 
-  t.alike(sliceAndDecode(i, [], [], keys), [[true, true], [true, false], [false, true], [false, false]])
+  t.alike(sliceAndDecode(i, [], [], keys), [
+    [true, true],
+    [true, false],
+    [false, true],
+    [false, false]
+  ])
 })
 
 test('basic prefix', function (t) {
-  const i = new IndexEncoder([
-    IndexEncoder.UINT,
-    IndexEncoder.STRING
-  ], { prefix: 4 })
+  const i = new IndexEncoder([IndexEncoder.UINT, IndexEncoder.STRING], {
+    prefix: 4
+  })
 
   const buf = i.encode([])
   t.alike(buf, b4a.from([4]))
@@ -133,10 +138,7 @@ test('basic prefix', function (t) {
 })
 
 test('hyperbee bounded iteration', async function (t) {
-  const keyEncoding = new IndexEncoder([
-    IndexEncoder.UINT,
-    IndexEncoder.STRING
-  ])
+  const keyEncoding = new IndexEncoder([IndexEncoder.UINT, IndexEncoder.STRING])
   const bee = new Hyperbee(new Hypercore(await t.tmp()), {
     keyEncoding,
     valueEncoding: 'utf-8'
@@ -150,7 +152,10 @@ test('hyperbee bounded iteration', async function (t) {
   await bee.put([3, 'aaa'], 'aaa')
   await bee.put([3, 'bbb'], 'bbb')
 
-  const expectedKeys = [[2, 'aa'], [2, 'bb']]
+  const expectedKeys = [
+    [2, 'aa'],
+    [2, 'bb']
+  ]
 
   for await (const node of bee.createReadStream({ gt: [1], lt: [3] })) {
     t.alike(node.key, expectedKeys.shift())
@@ -158,7 +163,7 @@ test('hyperbee bounded iteration', async function (t) {
   t.is(expectedKeys.length, 0)
 })
 
-function sliceAndDecodeNonInclusive (i, gt, lt, data) {
+function sliceAndDecodeNonInclusive(i, gt, lt, data) {
   const r = i.encodeRange({ gt, lt })
   const all = []
 
@@ -171,7 +176,7 @@ function sliceAndDecodeNonInclusive (i, gt, lt, data) {
   return all
 }
 
-function sliceAndDecode (i, gte, lte, data) {
+function sliceAndDecode(i, gte, lte, data) {
   const r = i.encodeRange({ gte, lte })
   const all = []
 
