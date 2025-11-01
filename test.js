@@ -141,6 +141,7 @@ test('hyperbee bounded iteration', async function (t) {
     keyEncoding,
     valueEncoding: 'utf-8'
   })
+  t.teardown(() => bee.close())
 
   await bee.put([1, 'a'], 'a')
   await bee.put([1, 'b'], 'b')
