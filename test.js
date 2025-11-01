@@ -2,7 +2,6 @@ const b4a = require('b4a')
 const test = require('brittle')
 const Hyperbee = require('hyperbee')
 const Hypercore = require('hypercore')
-const ram = require('random-access-memory')
 
 const IndexEncoder = require('./')
 
@@ -138,7 +137,7 @@ test('hyperbee bounded iteration', async function (t) {
     IndexEncoder.UINT,
     IndexEncoder.STRING
   ])
-  const bee = new Hyperbee(new Hypercore(ram), {
+  const bee = new Hyperbee(new Hypercore(await t.tmp()), {
     keyEncoding,
     valueEncoding: 'utf-8'
   })
