@@ -46,8 +46,9 @@ BUFFER.encode = function (state, buf) {
 
 BUFFER.decode = function (state) {
   if (state.start >= state.end) throw new Error('Out of bounds')
-  if (state.buffer[state.start++] !== 0x00)
+  if (state.buffer[state.start++] !== 0x00) {
     throw new Error('Invalid start of string')
+  }
 
   let escaped = null
 
