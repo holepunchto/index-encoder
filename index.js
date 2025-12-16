@@ -46,7 +46,9 @@ BUFFER.encode = function (state, buf) {
 
 BUFFER.decode = function (state) {
   if (state.start >= state.end) throw new Error('Out of bounds')
-  if (state.buffer[state.start++] !== 0x00) throw new Error('Invalid start of string')
+  if (state.buffer[state.start++] !== 0x00) {
+    throw new Error('Invalid start of string')
+  }
 
   let escaped = null
 
@@ -103,7 +105,7 @@ STRING.decode = function (state, str) {
 const UINT = {}
 
 UINT.preencode = function (state, n) {
-  state.end += n <= 0xfb ? 1 : n <= 0xffff ? 3 : n <= 0xffffffff ? 5 : (n === Infinity ? 1 : 9)
+  state.end += n <= 0xfb ? 1 : n <= 0xffff ? 3 : n <= 0xffffffff ? 5 : n === Infinity ? 1 : 9
 }
 
 UINT.encode = function (state, n) {
@@ -151,10 +153,7 @@ UINT.decode = function (state) {
 
   if (a === 0xfc) {
     if (state.end - state.start < 2) throw new Error('Out of bounds')
-    return (
-      state.buffer[state.start++] * 0x100 +
-      state.buffer[state.start++]
-    )
+    return state.buffer[state.start++] * 0x100 + state.buffer[state.start++]
   }
 
   if (a === 0xfd) {
@@ -162,10 +161,7 @@ UINT.decode = function (state) {
   }
 
   if (a === 0xfe) {
-    return (
-      decodeUint32(state) * 0x100000000 +
-      decodeUint32(state)
-    )
+    return decodeUint32(state) * 0x100000000 + decodeUint32(state)
   }
 
   return Infinity
@@ -178,7 +174,7 @@ BOOL.encode = (state, b) => UINT.encode(state, b ? 1 : 0)
 BOOL.decode = (state, b) => !!UINT.decode(state)
 
 module.exports = class IndexEncoder {
-  constructor (encodings, { prefix = -1 } = {}) {
+  constructor(encodings, { prefix = -1 } = {}) {
     this.encodings = encodings
     this.prefix = prefix
   }
@@ -188,36 +184,54 @@ module.exports = class IndexEncoder {
   static UINT = UINT
   static BOOL = BOOL
 
-  static lookup (c) {
+  static lookup(c) {
     switch (c) {
-      case 'uint': return UINT
-      case 'uint8': return UINT
-      case 'uint16': return UINT
-      case 'uint24': return UINT
-      case 'uint32': return UINT
-      case 'uint40': return UINT
-      case 'uint48': return UINT
-      case 'uint56': return UINT
-      case 'uint64': return UINT
-      case 'string': return STRING
-      case 'utf8': return STRING
-      case 'ascii': return STRING
-      case 'hex': return STRING
-      case 'base64': return STRING
-      case 'fixed32': return BUFFER
-      case 'fixed64': return BUFFER
-      case 'buffer': return BUFFER
-      case 'bool': return BOOL
+      case 'uint':
+        return UINT
+      case 'uint8':
+        return UINT
+      case 'uint16':
+        return UINT
+      case 'uint24':
+        return UINT
+      case 'uint32':
+        return UINT
+      case 'uint40':
+        return UINT
+      case 'uint48':
+        return UINT
+      case 'uint56':
+        return UINT
+      case 'uint64':
+        return UINT
+      case 'string':
+        return STRING
+      case 'utf8':
+        return STRING
+      case 'ascii':
+        return STRING
+      case 'hex':
+        return STRING
+      case 'base64':
+        return STRING
+      case 'fixed32':
+        return BUFFER
+      case 'fixed64':
+        return BUFFER
+      case 'buffer':
+        return BUFFER
+      case 'bool':
+        return BOOL
     }
 
     throw new Error('Unknown type')
   }
 
-  encode (keys) {
+  encode(keys) {
     return this._encode(keys, false)
   }
 
-  _encode (keys, terminate) {
+  _encode(keys, terminate) {
     if (b4a.isBuffer(keys)) return keys
 
     const state = { start: 0, end: 0, buffer: null }
@@ -245,20 +259,20 @@ module.exports = class IndexEncoder {
     return state.buffer
   }
 
-  decode (buffer) {
+  decode(buffer) {
     const state = { start: 0, end: buffer.byteLength, buffer }
     const result = []
 
     if (this.prefix !== -1) UINT.decode(state)
     for (const enc of this.encodings) {
-      const key = state.start < state.end ? enc.decode(state) : (enc === UINT ? 0 : null)
+      const key = state.start < state.end ? enc.decode(state) : enc === UINT ? 0 : null
       result.push(key)
     }
 
     return result
   }
 
-  encodeRange ({ gt, gte, lt, lte }) {
+  encodeRange({ gt, gte, lt, lte }) {
     const range = {
       gt: gt && this._encode(gt, true),
       gte: gte && this._encode(gte, false),
@@ -275,7 +289,7 @@ module.exports = class IndexEncoder {
   }
 }
 
-function encodeUint (n) {
+function encodeUint(n) {
   const state = { start: 0, end: 0, buffer: null }
   UINT.preencode(state, n)
   state.buffer = b4a.allocUnsafe(state.end)
@@ -283,14 +297,14 @@ function encodeUint (n) {
   return state.buffer
 }
 
-function encodeUint32 (state, n) {
+function encodeUint32(state, n) {
   state.buffer[state.start++] = n >>> 24
   state.buffer[state.start++] = n >>> 16
   state.buffer[state.start++] = n >>> 8
   state.buffer[state.start++] = n
 }
 
-function decodeUint32 (state, n) {
+function decodeUint32(state, n) {
   if (state.end - state.start < 4) throw new Error('Out of bounds')
   return (
     state.buffer[state.start++] * 0x1000000 +
