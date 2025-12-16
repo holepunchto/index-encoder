@@ -105,16 +105,7 @@ STRING.decode = function (state, str) {
 const UINT = {}
 
 UINT.preencode = function (state, n) {
-  state.end +=
-    n <= 0xfb
-      ? 1
-      : n <= 0xffff
-        ? 3
-        : n <= 0xffffffff
-          ? 5
-          : n === Infinity
-            ? 1
-            : 9
+  state.end += n <= 0xfb ? 1 : n <= 0xffff ? 3 : n <= 0xffffffff ? 5 : n === Infinity ? 1 : 9
 }
 
 UINT.encode = function (state, n) {
@@ -274,8 +265,7 @@ module.exports = class IndexEncoder {
 
     if (this.prefix !== -1) UINT.decode(state)
     for (const enc of this.encodings) {
-      const key =
-        state.start < state.end ? enc.decode(state) : enc === UINT ? 0 : null
+      const key = state.start < state.end ? enc.decode(state) : enc === UINT ? 0 : null
       result.push(key)
     }
 
