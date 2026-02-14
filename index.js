@@ -227,7 +227,7 @@ INT.decode = function (state) {
   // Check if negative
   if ((buf[state.start] & 0x80) === 0) {
     sign = -1
-    flipBits(buf, state.start, state.end)
+    buf[state.start] ^= 0xff
   }
 
   const a = buf[state.start++]
@@ -236,10 +236,12 @@ INT.decode = function (state) {
 
   if (a === 0xfc) {
     if (state.end - state.start < 2) throw new Error('Out of bounds')
+    if (sign === -1) flipBits(buf, state.start, state.start + 2)
     return sign * (buf[state.start++] * 0x100 + buf[state.start++])
   }
 
   if (a === 0xfd) {
+    if (sign === -1) flipBits(buf, state.start, state.start + 4)
     const tempState = { ...state, buffer: buf }
     const result = decodeUint32(tempState)
     state.start = tempState.start
@@ -247,6 +249,7 @@ INT.decode = function (state) {
   }
 
   if (a === 0xfe) {
+    if (sign === -1) flipBits(buf, state.start, state.start + 8)
     const tempState = { ...state, buffer: buf }
     const r = decodeUint32(tempState)
     const n = decodeUint32(tempState)
