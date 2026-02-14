@@ -128,10 +128,7 @@ test('int - encoder', function (t) {
   t.is(encodeDecode(-11491632000000), -11491632000000, '> 0x100000000')
 
   t.is(
-    b4a.compare(
-      encode(-100).buffer,
-      encode(-1_000_000).buffer
-    ),
+    b4a.compare(encode(-100).buffer, encode(-1_000_000).buffer),
     1,
     'negative numbers order correctly'
   )
@@ -140,16 +137,7 @@ test('int - encoder', function (t) {
 test('int', function (t) {
   const i = new IndexEncoder([IndexEncoder.INT])
 
-  const data = [
-    [0],
-    [-0],
-    [1],
-    [2],
-    [300],
-    [-400],
-    [Infinity],
-    [-Infinity]
-  ]
+  const data = [[0], [-0], [1], [2], [300], [-400], [Infinity], [-Infinity]]
 
   const keys = data.map((d) => i.encode(d))
 
@@ -164,14 +152,12 @@ test('int', function (t) {
     [-Infinity]
   ])
   t.alike(sliceAndDecodeNonInclusive(i, [0], [2], keys), [[1]])
-  t.alike(sliceAndDecode(i, [], [-100], keys), [
-    [-400],
-    [-Infinity]
-  ])
-  t.alike(sliceAndDecode(i, [300], [], keys), [
-    [300],
-    [Infinity]
-  ], 'ignores negative number of greater magnitude')
+  t.alike(sliceAndDecode(i, [], [-100], keys), [[-400], [-Infinity]])
+  t.alike(
+    sliceAndDecode(i, [300], [], keys),
+    [[300], [Infinity]],
+    'ignores negative number of greater magnitude'
+  )
 })
 
 test('bool indices', function (t) {
