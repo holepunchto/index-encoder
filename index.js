@@ -239,11 +239,18 @@ INT.decode = function (state) {
   }
 
   if (a === 0xfd) {
-    return sign * decodeUint32(state)
+    const tempState = { ...state, buffer: buf }
+    const result = decodeUint32(tempState)
+    state.start = tempState.start
+    return sign * result
   }
 
   if (a === 0xfe) {
-    return sign * (decodeUint32(state) * 0x100000000 + decodeUint32(state))
+    const tempState = { ...state, buffer: buf }
+    const r = decodeUint32(tempState)
+    const n = decodeUint32(tempState)
+    state.start = tempState.start
+    return sign * (r * 0x100000000 + n)
   }
 
   return sign * Infinity
