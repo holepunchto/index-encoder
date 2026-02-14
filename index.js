@@ -287,6 +287,24 @@ module.exports = class IndexEncoder {
         return UINT
       case 'uint64':
         return UINT
+      case 'int':
+        return INT
+      case 'int8':
+        return INT
+      case 'int16':
+        return INT
+      case 'int24':
+        return INT
+      case 'int32':
+        return INT
+      case 'int40':
+        return INT
+      case 'int48':
+        return INT
+      case 'int56':
+        return INT
+      case 'int64':
+        return INT
       case 'string':
         return STRING
       case 'utf8':
