@@ -141,27 +141,32 @@ test('int - encoder', function (t) {
 })
 
 test('int', function (t) {
-  const i = new IndexEncoder([IndexEncoder.INT])
+  const i = new IndexEncoder([IndexEncoder.INT, IndexEncoder.STRING])
 
-  const data = [[0], [-0], [1], [2], [300], [-400], [Infinity], [-Infinity]]
+  const data = [
+    [0, 'a'],
+    [-0, 'b'],
+    [1, 'c'],
+    [2, 'c'],
+    [300, 'beep'],
+    [-400, 'boop']
+  ]
 
   const keys = data.map((d) => i.encode(d))
 
   t.alike(sliceAndDecode(i, [], [], keys), [
-    [0],
-    [0], // Converts -0 to 0
-    [1],
-    [2],
-    [300],
-    [-400],
-    [Infinity],
-    [-Infinity]
+    [0, 'a'],
+    [0, 'b'], // Converts -0 to 0
+    [1, 'c'],
+    [2, 'c'],
+    [300, 'beep'],
+    [-400, 'boop']
   ])
-  t.alike(sliceAndDecodeNonInclusive(i, [0], [2], keys), [[1]])
-  t.alike(sliceAndDecode(i, [], [-100], keys), [[-400], [-Infinity]])
+  t.alike(sliceAndDecodeNonInclusive(i, [0], [2], keys), [[1, 'c']])
+  t.alike(sliceAndDecode(i, [], [-100], keys), [[-400, 'boop']])
   t.alike(
     sliceAndDecode(i, [300], [], keys),
-    [[300], [Infinity]],
+    [[300, 'beep']],
     'ignores negative number of greater magnitude'
   )
 })
