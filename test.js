@@ -126,6 +126,7 @@ test('int - encoder', function (t) {
   t.is(encodeDecode(-400), -400, '-400')
   t.is(encodeDecode(-Infinity), -Infinity, '-Infinity')
   t.is(encodeDecode(-11491632000000), -11491632000000, '> 0x100000000')
+  t.is(encodeDecode(-0xffffffff), -0xffffffff, '<= 0xffffffff')
 
   t.is(
     b4a.compare(encode(-100).buffer, encode(-1_000_000).buffer),
