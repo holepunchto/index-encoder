@@ -256,6 +256,12 @@ INT.decode = function (state) {
   return sign * Infinity
 }
 
+const DATE = {}
+
+DATE.preencode = (state, d) => INT.preencode(state, d.getTime())
+DATE.encode = (state, d) => INT.encode(state, d.getTime())
+DATE.decode = (state) => new Date(INT.decode(state))
+
 const BOOL = {}
 
 BOOL.preencode = (state, b) => UINT.preencode(state, b ? 1 : 0)
@@ -272,6 +278,7 @@ module.exports = class IndexEncoder {
   static STRING = STRING
   static UINT = UINT
   static INT = INT
+  static DATE = DATE
   static BOOL = BOOL
 
   static lookup(c) {

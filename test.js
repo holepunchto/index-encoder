@@ -160,6 +160,37 @@ test('int', function (t) {
   )
 })
 
+test('date', function (t) {
+  const i = new IndexEncoder([IndexEncoder.DATE])
+
+  const data = [
+    [new Date(0)],
+    [new Date('1988-07-08')],
+    [new Date('2016-09-08')],
+    [new Date('2025-08-01')],
+    [new Date('1605-11-05')]
+  ]
+
+  const keys = data.map((d) => i.encode(d))
+
+  t.alike(sliceAndDecode(i, [], [], keys), data)
+  t.alike(sliceAndDecodeNonInclusive(i, [new Date('1987')], [new Date('2026')], keys), [
+    [new Date('1988-07-08')],
+    [new Date('2016-09-08')],
+    [new Date('2025-08-01')]
+  ])
+  t.alike(
+    sliceAndDecode(i, [], [new Date('1979')], keys),
+    [[new Date(0)], [new Date('1605-11-05')]],
+    'range open start'
+  )
+  t.alike(
+    sliceAndDecode(i, [new Date('2024')], [], keys),
+    [[new Date('2025-08-01')]],
+    'range open end'
+  )
+})
+
 test('bool indices', function (t) {
   const i = new IndexEncoder([IndexEncoder.BOOL, IndexEncoder.BOOL])
 
