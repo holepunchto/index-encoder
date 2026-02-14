@@ -122,11 +122,16 @@ test('int - encoder', function (t) {
 
   t.is(encodeDecode(0), 0, 'zero')
   t.alike(encode(-0).buffer, encode(0).buffer, 'neg zero ignore')
-  t.is(encodeDecode(-255), -255, '-255')
+  t.is(encodeDecode(123), 123, '123')
+  t.is(encodeDecode(-123), -123, '-123')
+  t.is(encodeDecode(400), 400, '400')
   t.is(encodeDecode(-400), -400, '-400')
+  t.is(encodeDecode(Infinity), Infinity, 'Infinity')
   t.is(encodeDecode(-Infinity), -Infinity, '-Infinity')
-  t.is(encodeDecode(-11491632000000), -11491632000000, '> 0x100000000')
-  t.is(encodeDecode(-0xffffffff), -0xffffffff, '<= 0xffffffff')
+  t.is(encodeDecode(11491632000000), 11491632000000, '> 0x100000000')
+  t.is(encodeDecode(-11491632000000), -11491632000000, 'neg > 0x100000000')
+  t.is(encodeDecode(0xffffffff), 0xffffffff, '<= 0xffffffff')
+  t.is(encodeDecode(-0xffffffff), -0xffffffff, 'neg <= 0xffffffff')
 
   t.is(
     b4a.compare(encode(-100).buffer, encode(-1_000_000).buffer),

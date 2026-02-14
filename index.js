@@ -229,9 +229,7 @@ INT.decode = function (state) {
   const sign = positive ? 1 : -1
   const a = buf[state.start++]
 
-  if (a <= 0xfb) {
-    return sign * (a - (positive ? 0x80 : 0))
-  }
+  if (a <= 0xfb) return sign * (a - 0x80) // remove sign bit
 
   if (a === 0xfc) {
     if (state.end - state.start < 2) throw new Error('Out of bounds')
