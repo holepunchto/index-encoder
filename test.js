@@ -104,6 +104,75 @@ test('basic', function (t) {
   ])
 })
 
+test('int - encoder', function (t) {
+  const enc = IndexEncoder.INT
+
+  const encode = (n) => {
+    const state = { start: 0, end: 0, buffer: null }
+    enc.preencode(state, n)
+    state.buffer = b4a.allocUnsafe(state.end)
+    enc.encode(state, n)
+    return state
+  }
+  const encodeDecode = (n) => {
+    const state = encode(n)
+    state.start = 0
+    return enc.decode(state)
+  }
+
+  t.is(encodeDecode(0), 0, 'zero')
+  t.alike(encode(-0).buffer, encode(0).buffer, 'neg zero ignore')
+  t.is(encodeDecode(-255), -255, '-255')
+  t.is(encodeDecode(-400), -400, '-400')
+  t.is(encodeDecode(-Infinity), -Infinity, '-Infinity')
+
+  t.is(
+    b4a.compare(
+      encode(-100).buffer,
+      encode(-1_000_000).buffer
+    ),
+    1,
+    'negative numbers order correctly'
+  )
+})
+
+test('int', function (t) {
+  const i = new IndexEncoder([IndexEncoder.INT])
+
+  const data = [
+    [0],
+    [-0],
+    [1],
+    [2],
+    [300],
+    [-400],
+    [Infinity],
+    [-Infinity]
+  ]
+
+  const keys = data.map((d) => i.encode(d))
+
+  t.alike(sliceAndDecode(i, [], [], keys), [
+    [0],
+    [0], // Converts -0 to 0
+    [1],
+    [2],
+    [300],
+    [-400],
+    [Infinity],
+    [-Infinity]
+  ])
+  t.alike(sliceAndDecodeNonInclusive(i, [0], [2], keys), [[1]])
+  t.alike(sliceAndDecode(i, [], [-100], keys), [
+    [-400],
+    [-Infinity]
+  ])
+  t.alike(sliceAndDecode(i, [300], [], keys), [
+    [300],
+    [Infinity]
+  ], 'ignores negative number of greater magnitude')
+})
+
 test('bool indices', function (t) {
   const i = new IndexEncoder([IndexEncoder.BOOL, IndexEncoder.BOOL])
 

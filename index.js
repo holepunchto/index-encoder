@@ -167,6 +167,88 @@ UINT.decode = function (state) {
   return Infinity
 }
 
+const INT = {}
+
+INT.preencode = function (state, n) {
+  n = Math.abs(n)
+  state.end += n <= 0x7b ? 1 : n <= 0xffff ? 3 : n <= 0xffffffff ? 5 : n === Infinity ? 1 : 9
+}
+
+INT.encode = function (state, n) {
+  const positive = n >= 0 // ignore -0
+  n = Math.abs(n)
+  const initialStart = state.start
+  if (n === Infinity) {
+    state.buffer[state.start++] = 0xff
+    if (!positive) flipBits(state.buffer, initialStart, state.start)
+    return
+  }
+
+  if (n <= 0x7b) {
+    const positiveBit = 0x80
+    state.buffer[state.start++] = n + positiveBit
+    if (!positive) flipBits(state.buffer, initialStart, state.start)
+    return
+  }
+
+  if (n <= 0xffff) {
+    state.buffer[state.start++] = 0xfc
+    state.buffer[state.start++] = n >>> 8
+    state.buffer[state.start++] = n
+    if (!positive) flipBits(state.buffer, initialStart, state.start)
+    return
+  }
+
+  if (n <= 0xffffffff) {
+    state.buffer[state.start++] = 0xfd
+    encodeUint32(state, n)
+    if (!positive) flipBits(state.buffer, initialStart, state.start)
+    return
+  }
+
+  if (Number.isSafeInteger(n)) {
+    state.buffer[state.start++] = 0xfe
+
+    const r = Math.floor(n / 0x100000000)
+    encodeUint32(state, r)
+    encodeUint32(state, n)
+    if (!positive) flipBits(state.buffer, initialStart, state.start)
+    return
+  }
+
+  throw new Error('Invalid number ' + n)
+}
+
+INT.decode = function (state) {
+  if (state.start >= state.end) throw new Error('Out of bounds')
+
+  const buf = b4a.from(state.buffer)
+  const positive = (buf[state.start] & 0x80) !== 0
+  if (!positive) flipBits(buf, state.start, state.end)
+
+  const sign = positive ? 1 : -1
+  const a = buf[state.start++]
+
+  if (a <= 0xfb) {
+    return sign * (a - (positive ? 0x80 : 0))
+  }
+
+  if (a === 0xfc) {
+    if (state.end - state.start < 2) throw new Error('Out of bounds')
+    return sign * (buf[state.start++] * 0x100 + buf[state.start++])
+  }
+
+  if (a === 0xfd) {
+    return sign * decodeUint32(state)
+  }
+
+  if (a === 0xfe) {
+    return sign * (decodeUint32(state) * 0x100000000 + decodeUint32(state))
+  }
+
+  return sign * Infinity
+}
+
 const BOOL = {}
 
 BOOL.preencode = (state, b) => UINT.preencode(state, b ? 1 : 0)
@@ -182,6 +264,7 @@ module.exports = class IndexEncoder {
   static BUFFER = BUFFER
   static STRING = STRING
   static UINT = UINT
+  static INT = INT
   static BOOL = BOOL
 
   static lookup(c) {
@@ -312,4 +395,10 @@ function decodeUint32(state, n) {
     state.buffer[state.start++] * 0x100 +
     state.buffer[state.start++]
   )
+}
+
+function flipBits(buf, start, end) {
+  for (let i = start; i < end; i++) {
+    buf[i] ^= 0xff
+  }
 }
