@@ -223,10 +223,13 @@ INT.decode = function (state) {
   if (state.start >= state.end) throw new Error('Out of bounds')
 
   const buf = b4a.from(state.buffer)
-  const positive = (buf[state.start] & 0x80) !== 0
-  if (!positive) flipBits(buf, state.start, state.end)
+  let sign = 1
+  // Check if negative
+  if ((buf[state.start] & 0x80) === 0) {
+    sign = -1
+    flipBits(buf, state.start, state.end)
+  }
 
-  const sign = positive ? 1 : -1
   const a = buf[state.start++]
 
   if (a <= 0xfb) return sign * (a - 0x80) // remove sign bit
