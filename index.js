@@ -339,6 +339,8 @@ module.exports = class IndexEncoder {
         return BUFFER
       case 'buffer':
         return BUFFER
+      case 'date':
+        return DATE
       case 'bool':
         return BOOL
     }
