@@ -170,49 +170,93 @@ UINT.decode = function (state) {
 const INT = {}
 
 INT.preencode = function (state, n) {
+  // One asymmetric condition
+  if (n >= -0xff && n < 0) {
+    state.end += 2
+    return
+  }
   n = Math.abs(n)
-  state.end += n <= 0x7b ? 1 : n <= 0xffff ? 3 : n <= 0xffffffff ? 5 : n === Infinity ? 1 : 9
+  state.end += n <= 0xf6 ? 1 : n <= 0xffff ? 3 : n <= 0xffffffff ? 5 : n === Infinity ? 1 : 9
 }
 
 INT.encode = function (state, n) {
-  const positive = n >= 0 // ignore -0
-  n = Math.abs(n)
-  const initialStart = state.start
   if (n === Infinity) {
     state.buffer[state.start++] = 0xff
-    if (!positive) flipBits(state.buffer, initialStart, state.start)
     return
   }
 
-  if (n <= 0x7b) {
-    const positiveBit = 0x80
-    state.buffer[state.start++] = n + positiveBit
-    if (!positive) flipBits(state.buffer, initialStart, state.start)
+  if (n === -Infinity) {
+    state.buffer[state.start++] = 0x00
     return
   }
 
+  // Negative 64 bit
+  if (n < -0xffffffff) {
+    state.buffer[state.start++] = 0x01
+
+    n += Number.MAX_SAFE_INTEGER
+    const r = Math.floor(n / 0x100000000)
+    encodeUint32(state, r)
+    encodeUint32(state, n)
+    return
+  }
+
+  // Negative 32 bit
+  if (n < -0xffff) {
+    state.buffer[state.start++] = 0x02
+
+    n += 0xffffffff
+    encodeUint32(state, n)
+    return
+  }
+
+  // Negative 16bit
+  if (n < -0xff) {
+    state.buffer[state.start++] = 0x03
+
+    n += 0xffff
+    state.buffer[state.start++] = n >>> 8
+    state.buffer[state.start++] = n
+    return
+  }
+
+  // Negative 8bit
+  if (n < 0) {
+    state.buffer[state.start++] = 0x04
+
+    n += 0xff
+    state.buffer[state.start++] = n
+    return
+  }
+
+  // Remainder of 8bit space for positive int
+  if (n <= 0xf6) {
+    state.buffer[state.start++] = n + 0x05
+    return
+  }
+
+  // Positive 16bit
   if (n <= 0xffff) {
     state.buffer[state.start++] = 0xfc
     state.buffer[state.start++] = n >>> 8
     state.buffer[state.start++] = n
-    if (!positive) flipBits(state.buffer, initialStart, state.start)
     return
   }
 
+  // Positive 32bit
   if (n <= 0xffffffff) {
     state.buffer[state.start++] = 0xfd
     encodeUint32(state, n)
-    if (!positive) flipBits(state.buffer, initialStart, state.start)
     return
   }
 
+  // Positive 64bit
   if (Number.isSafeInteger(n)) {
     state.buffer[state.start++] = 0xfe
 
     const r = Math.floor(n / 0x100000000)
     encodeUint32(state, r)
     encodeUint32(state, n)
-    if (!positive) flipBits(state.buffer, initialStart, state.start)
     return
   }
 
@@ -222,42 +266,41 @@ INT.encode = function (state, n) {
 INT.decode = function (state) {
   if (state.start >= state.end) throw new Error('Out of bounds')
 
-  const buf = b4a.from(state.buffer)
-  let sign = 1
-  // Check if negative
-  if ((buf[state.start] & 0x80) === 0) {
-    sign = -1
-    buf[state.start] ^= 0xff
+  const a = state.buffer[state.start++]
+
+  if (a === 0x00) return -Infinity
+
+  if (a === 0x01) {
+    return (decodeUint32(state) * 0x100000000 + decodeUint32(state)) - Number.MAX_SAFE_INTEGER
   }
 
-  const a = buf[state.start++]
+  if (a === 0x02) {
+    return decodeUint32(state) - 0xffffffff
+  }
 
-  if (a <= 0xfb) return sign * (a - 0x80) // remove sign bit
+  if (a === 0x03) {
+    if (state.end - state.start < 2) throw new Error('Out of bounds')
+    return state.buffer[state.start++] * 0x100 + state.buffer[state.start++] - 0xffff
+  }
+
+  if (a === 0x04) return state.buffer[state.start++] - 0xff
+
+  if (a <= 0xfb) return a - 0x05
 
   if (a === 0xfc) {
     if (state.end - state.start < 2) throw new Error('Out of bounds')
-    if (sign === -1) flipBits(buf, state.start, state.start + 2)
-    return sign * (buf[state.start++] * 0x100 + buf[state.start++])
+    return state.buffer[state.start++] * 0x100 + state.buffer[state.start++]
   }
 
   if (a === 0xfd) {
-    if (sign === -1) flipBits(buf, state.start, state.start + 4)
-    const tempState = { ...state, buffer: buf }
-    const result = decodeUint32(tempState)
-    state.start = tempState.start
-    return sign * result
+    return decodeUint32(state)
   }
 
   if (a === 0xfe) {
-    if (sign === -1) flipBits(buf, state.start, state.start + 8)
-    const tempState = { ...state, buffer: buf }
-    const r = decodeUint32(tempState)
-    const n = decodeUint32(tempState)
-    state.start = tempState.start
-    return sign * (r * 0x100000000 + n)
+    return decodeUint32(state) * 0x100000000 + decodeUint32(state)
   }
 
-  return sign * Infinity
+  return Infinity
 }
 
 const DATE = {}
