@@ -171,7 +171,7 @@ const BOOL = {}
 
 BOOL.preencode = (state, b) => UINT.preencode(state, b ? 1 : 0)
 BOOL.encode = (state, b) => UINT.encode(state, b ? 1 : 0)
-BOOL.decode = (state, b) => !!UINT.decode(state)
+BOOL.decode = (state) => !!UINT.decode(state)
 
 module.exports = class IndexEncoder {
   constructor(encodings, { prefix = -1 } = {}) {
@@ -304,7 +304,7 @@ function encodeUint32(state, n) {
   state.buffer[state.start++] = n
 }
 
-function decodeUint32(state, n) {
+function decodeUint32(state) {
   if (state.end - state.start < 4) throw new Error('Out of bounds')
   return (
     state.buffer[state.start++] * 0x1000000 +
