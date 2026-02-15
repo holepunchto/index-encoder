@@ -192,6 +192,7 @@ INT.encode = function (state, n) {
 
   // Negative 64 bit
   if (n < -0xffffffff) {
+    if (!Number.isSafeInteger(n)) throw new Error('Invalid number ' + n)
     state.buffer[state.start++] = 0x01
 
     const r = Math.floor(-n / 0x100000000)

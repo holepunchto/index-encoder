@@ -152,6 +152,9 @@ test('int - encoder', function (t) {
     1,
     'negative numbers order correctly'
   )
+
+  t.exception(() => encode(Number.MIN_SAFE_INTEGER - 1), /Invalid number/, 'throws on unsafe negative numbers')
+  t.exception(() => encode(Number.MAX_SAFE_INTEGER + 1), /Invalid number/, 'throws on unsafe positive numbers')
 })
 
 test('int', function (t) {
