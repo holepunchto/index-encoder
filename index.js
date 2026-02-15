@@ -194,10 +194,9 @@ INT.encode = function (state, n) {
   if (n < -0xffffffff) {
     state.buffer[state.start++] = 0x01
 
-    n += Number.MAX_SAFE_INTEGER
-    const r = Math.floor(n / 0x100000000)
-    encodeUint32(state, r)
-    encodeUint32(state, n)
+    const r = Math.floor(-n / 0x100000000)
+    encodeUint32(state, -r + 0xffffffff)
+    encodeUint32(state, -(-n % 0x100000000) + 0xffffffff)
     return
   }
 
@@ -271,7 +270,11 @@ INT.decode = function (state) {
   if (a === 0x00) return -Infinity
 
   if (a === 0x01) {
-    return decodeUint32(state) * 0x100000000 + decodeUint32(state) - Number.MAX_SAFE_INTEGER
+    // Split (2^64 - 1) into its 32 bit components
+    // r * 0x100000000 + n - (2^64 - 1)
+    // r * 0x100000000 + n - (0xffffffff * 0x100000000) - 0xffffffff
+    // (r - 0xffffffff) * 0x100000000 + n - 0xffffffff
+    return (decodeUint32(state) - 0xffffffff) * 0x100000000 + decodeUint32(state) - 0xffffffff
   }
 
   if (a === 0x02) {
