@@ -271,7 +271,7 @@ INT.decode = function (state) {
   if (a === 0x00) return -Infinity
 
   if (a === 0x01) {
-    return (decodeUint32(state) * 0x100000000 + decodeUint32(state)) - Number.MAX_SAFE_INTEGER
+    return decodeUint32(state) * 0x100000000 + decodeUint32(state) - Number.MAX_SAFE_INTEGER
   }
 
   if (a === 0x02) {
@@ -476,10 +476,4 @@ function decodeUint32(state, n) {
     state.buffer[state.start++] * 0x100 +
     state.buffer[state.start++]
   )
-}
-
-function flipBits(buf, start, end) {
-  for (let i = start; i < end; i++) {
-    buf[i] ^= 0xff
-  }
 }
