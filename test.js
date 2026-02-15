@@ -153,6 +153,12 @@ test('int - encoder', function (t) {
     'negative numbers order correctly'
   )
 
+  t.is(
+    b4a.compare(encode(100).buffer, encode(-1_000_000).buffer),
+    1,
+    'positive vs negative numbers order correctly'
+  )
+
   t.exception(() => encode(Number.MIN_SAFE_INTEGER - 1), /Invalid number/, 'throws on unsafe negative numbers')
   t.exception(() => encode(Number.MAX_SAFE_INTEGER + 1), /Invalid number/, 'throws on unsafe positive numbers')
 })
