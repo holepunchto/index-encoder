@@ -104,6 +104,135 @@ test('basic', function (t) {
   ])
 })
 
+test('int - encoder', function (t) {
+  const enc = IndexEncoder.INT
+
+  const encode = (n) => {
+    const state = { start: 0, end: 0, buffer: null }
+    enc.preencode(state, n)
+    state.buffer = b4a.allocUnsafe(state.end)
+    enc.encode(state, n)
+    return state
+  }
+  const encodeDecode = (n) => {
+    const state = encode(n)
+    state.start = 0
+    return enc.decode(state)
+  }
+
+  t.is(encodeDecode(0), 0, 'zero')
+  t.alike(encode(-0).buffer, encode(0).buffer, 'neg zero ignore')
+  t.is(encodeDecode(123), 123, '123')
+  t.is(encodeDecode(-123), -123, '-123')
+  t.is(encodeDecode(400), 400, '400')
+  t.is(encodeDecode(-400), -400, '-400')
+  t.is(encodeDecode(Infinity), Infinity, 'Infinity')
+  t.is(encodeDecode(-Infinity), -Infinity, '-Infinity')
+  t.is(encodeDecode(0xf6), 0xf6, '0xf6 - max 1 byte')
+  t.is(encodeDecode(0xf7), 0xf7, '0xf7 - max 1 byte +1')
+  t.is(encodeDecode(0xff), 0xff, '+(2^8-1)')
+  t.is(encodeDecode(-0xff), -0xff, '-(2^8-1)')
+  t.is(encodeDecode(0x100), 0x100, '+2^8')
+  t.is(encodeDecode(-0x100), -0x100, '-2^8')
+  t.is(encodeDecode(0xffff), 0xffff, '+(2^16-1)')
+  t.is(encodeDecode(-0xffff), -0xffff, '-(2^16-1)')
+  t.is(encodeDecode(0x10000), 0x10000, '+2^16')
+  t.is(encodeDecode(-0x10000), -0x10000, '-2^16')
+  t.is(encodeDecode(0xffffffff), 0xffffffff, '+(2^32-1)')
+  t.is(encodeDecode(-0xffffffff), -0xffffffff, '-(2^32-1)')
+  t.is(encodeDecode(0x100000000), 0x100000000, '+2^32')
+  t.is(encodeDecode(-0x100000000), -0x100000000, '-2^32')
+  t.is(encodeDecode(11491632000000), 11491632000000, '2^32 < x < 2^32')
+  t.is(encodeDecode(-11491632000000), -11491632000000, '-2^32 > x > -2^32')
+  t.is(encodeDecode(Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER, 'MAX_SAFE_INTEGER')
+  t.is(encodeDecode(Number.MIN_SAFE_INTEGER), Number.MIN_SAFE_INTEGER, 'MIN_SAFE_INTEGER')
+
+  t.is(
+    b4a.compare(encode(-100).buffer, encode(-1_000_000).buffer),
+    1,
+    'negative numbers order correctly'
+  )
+
+  t.is(
+    b4a.compare(encode(100).buffer, encode(-1_000_000).buffer),
+    1,
+    'positive vs negative numbers order correctly'
+  )
+
+  t.exception(
+    () => encode(Number.MIN_SAFE_INTEGER - 1),
+    /Invalid number/,
+    'throws on unsafe negative numbers'
+  )
+  t.exception(
+    () => encode(Number.MAX_SAFE_INTEGER + 1),
+    /Invalid number/,
+    'throws on unsafe positive numbers'
+  )
+})
+
+test('int', function (t) {
+  const i = new IndexEncoder([IndexEncoder.INT, IndexEncoder.STRING])
+
+  const data = [
+    [0, 'a'],
+    [-0, 'b'],
+    [1, 'c'],
+    [2, 'c'],
+    [300, 'beep'],
+    [-400, 'boop']
+  ]
+
+  const keys = data.map((d) => i.encode(d))
+
+  t.alike(sliceAndDecode(i, [], [], keys), [
+    [0, 'a'],
+    [0, 'b'], // Converts -0 to 0
+    [1, 'c'],
+    [2, 'c'],
+    [300, 'beep'],
+    [-400, 'boop']
+  ])
+  t.alike(sliceAndDecodeNonInclusive(i, [0], [2], keys), [[1, 'c']])
+  t.alike(sliceAndDecode(i, [], [-100], keys), [[-400, 'boop']])
+  t.alike(
+    sliceAndDecode(i, [300], [], keys),
+    [[300, 'beep']],
+    'ignores negative number of greater magnitude'
+  )
+})
+
+test('date', function (t) {
+  const i = new IndexEncoder([IndexEncoder.DATE])
+
+  const data = [
+    [new Date(0)],
+    [new Date('1988-07-08')],
+    [new Date('2016-09-08')],
+    [new Date('2025-08-01')],
+    [new Date('1605-11-05')]
+  ]
+
+  const keys = data.map((d) => i.encode(d))
+
+  t.alike(sliceAndDecode(i, [], [], keys), data)
+  t.alike(sliceAndDecodeNonInclusive(i, [new Date('1987')], [new Date('2026')], keys), [
+    [new Date('1988-07-08')],
+    [new Date('2016-09-08')],
+    [new Date('2025-08-01')]
+  ])
+  t.alike(
+    sliceAndDecode(i, [], [new Date('1979')], keys),
+    [[new Date(0)], [new Date('1605-11-05')]],
+    'range open start'
+  )
+  t.alike(
+    sliceAndDecode(i, [new Date('2024')], [], keys),
+    [[new Date('2025-08-01')]],
+    'range open end'
+  )
+})
+
 test('bool indices', function (t) {
   const i = new IndexEncoder([IndexEncoder.BOOL, IndexEncoder.BOOL])
 

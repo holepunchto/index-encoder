@@ -167,6 +167,152 @@ UINT.decode = function (state) {
   return Infinity
 }
 
+const INT = {}
+
+INT.preencode = function (state, n) {
+  // One asymmetric condition
+  if (n >= -0xff && n < 0) {
+    state.end += 2
+    return
+  }
+  n = Math.abs(n)
+  state.end += n <= 0xf6 ? 1 : n <= 0xffff ? 3 : n <= 0xffffffff ? 5 : n === Infinity ? 1 : 9
+}
+
+INT.encode = function (state, n) {
+  if (n === Infinity) {
+    state.buffer[state.start++] = 0xff
+    return
+  }
+
+  if (n === -Infinity) {
+    state.buffer[state.start++] = 0x00
+    return
+  }
+
+  // Negative 64 bit
+  if (n < -0xffffffff) {
+    if (!Number.isSafeInteger(n)) throw new Error('Invalid number ' + n)
+    state.buffer[state.start++] = 0x01
+
+    const r = Math.floor(-n / 0x100000000)
+    encodeUint32(state, -r + 0xffffffff)
+    encodeUint32(state, -(-n % 0x100000000) + 0xffffffff)
+    return
+  }
+
+  // Negative 32 bit
+  if (n < -0xffff) {
+    state.buffer[state.start++] = 0x02
+
+    n += 0xffffffff
+    encodeUint32(state, n)
+    return
+  }
+
+  // Negative 16bit
+  if (n < -0xff) {
+    state.buffer[state.start++] = 0x03
+
+    n += 0xffff
+    state.buffer[state.start++] = n >>> 8
+    state.buffer[state.start++] = n
+    return
+  }
+
+  // Negative 8bit
+  if (n < 0) {
+    state.buffer[state.start++] = 0x04
+
+    n += 0xff
+    state.buffer[state.start++] = n
+    return
+  }
+
+  // Remainder of 8bit space for positive int
+  if (n <= 0xf6) {
+    state.buffer[state.start++] = n + 0x05
+    return
+  }
+
+  // Positive 16bit
+  if (n <= 0xffff) {
+    state.buffer[state.start++] = 0xfc
+    state.buffer[state.start++] = n >>> 8
+    state.buffer[state.start++] = n
+    return
+  }
+
+  // Positive 32bit
+  if (n <= 0xffffffff) {
+    state.buffer[state.start++] = 0xfd
+    encodeUint32(state, n)
+    return
+  }
+
+  // Positive 64bit
+  if (Number.isSafeInteger(n)) {
+    state.buffer[state.start++] = 0xfe
+
+    const r = Math.floor(n / 0x100000000)
+    encodeUint32(state, r)
+    encodeUint32(state, n)
+    return
+  }
+
+  throw new Error('Invalid number ' + n)
+}
+
+INT.decode = function (state) {
+  if (state.start >= state.end) throw new Error('Out of bounds')
+
+  const a = state.buffer[state.start++]
+
+  if (a === 0x00) return -Infinity
+
+  if (a === 0x01) {
+    // Split (2^64 - 1) into its 32 bit components
+    // r * 0x100000000 + n - (2^64 - 1)
+    // r * 0x100000000 + n - (0xffffffff * 0x100000000) - 0xffffffff
+    // (r - 0xffffffff) * 0x100000000 + n - 0xffffffff
+    return (decodeUint32(state) - 0xffffffff) * 0x100000000 + decodeUint32(state) - 0xffffffff
+  }
+
+  if (a === 0x02) {
+    return decodeUint32(state) - 0xffffffff
+  }
+
+  if (a === 0x03) {
+    if (state.end - state.start < 2) throw new Error('Out of bounds')
+    return state.buffer[state.start++] * 0x100 + state.buffer[state.start++] - 0xffff
+  }
+
+  if (a === 0x04) return state.buffer[state.start++] - 0xff
+
+  if (a <= 0xfb) return a - 0x05
+
+  if (a === 0xfc) {
+    if (state.end - state.start < 2) throw new Error('Out of bounds')
+    return state.buffer[state.start++] * 0x100 + state.buffer[state.start++]
+  }
+
+  if (a === 0xfd) {
+    return decodeUint32(state)
+  }
+
+  if (a === 0xfe) {
+    return decodeUint32(state) * 0x100000000 + decodeUint32(state)
+  }
+
+  return Infinity
+}
+
+const DATE = {}
+
+DATE.preencode = (state, d) => INT.preencode(state, d.getTime())
+DATE.encode = (state, d) => INT.encode(state, d.getTime())
+DATE.decode = (state) => new Date(INT.decode(state))
+
 const BOOL = {}
 
 BOOL.preencode = (state, b) => UINT.preencode(state, b ? 1 : 0)
@@ -182,6 +328,8 @@ module.exports = class IndexEncoder {
   static BUFFER = BUFFER
   static STRING = STRING
   static UINT = UINT
+  static INT = INT
+  static DATE = DATE
   static BOOL = BOOL
 
   static lookup(c) {
@@ -204,6 +352,24 @@ module.exports = class IndexEncoder {
         return UINT
       case 'uint64':
         return UINT
+      case 'int':
+        return INT
+      case 'int8':
+        return INT
+      case 'int16':
+        return INT
+      case 'int24':
+        return INT
+      case 'int32':
+        return INT
+      case 'int40':
+        return INT
+      case 'int48':
+        return INT
+      case 'int56':
+        return INT
+      case 'int64':
+        return INT
       case 'string':
         return STRING
       case 'utf8':
@@ -220,6 +386,8 @@ module.exports = class IndexEncoder {
         return BUFFER
       case 'buffer':
         return BUFFER
+      case 'date':
+        return DATE
       case 'bool':
         return BOOL
     }
